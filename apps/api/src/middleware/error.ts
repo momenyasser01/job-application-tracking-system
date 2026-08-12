@@ -15,10 +15,6 @@ export const notFoundHandler: RequestHandler = (_req, res) => {
   res.status(404).json({ error: 'Not found' })
 }
 
-/**
- * Express 5 forwards rejected promises from async handlers here automatically,
- * so routes can `throw` instead of wrapping every call in try/catch.
- */
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) {
     res.status(400).json({ error: 'Validation failed', issues: err.issues })
