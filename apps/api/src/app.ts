@@ -1,16 +1,16 @@
 import cors from 'cors'
 import express from 'express'
 import helmet from 'helmet'
-import type { Db } from './db/index.js'
+// import type { Db } from './db/index.js'
 import { env } from './env.js'
 import { errorHandler, notFoundHandler } from './middleware/error.js'
-import { applicationsRouter } from './routes/applications.js'
+// import { applicationsRouter } from './routes/applications.js'
 
 /**
  * Builds the app without binding a port, so tests can drive it in-process with
  * Supertest and `server.ts` stays the only place that calls `listen()`.
  */
-export function createApp(db: Db) {
+export function createApp(/*db: Db*/) {
   const app = express()
 
   app.use(helmet())
@@ -23,7 +23,7 @@ export function createApp(db: Db) {
 
   // Authentication goes here — one `app.use('/api', requireAuth)` line, plus a
   // user filter in the queries in routes/applications.ts.
-  app.use('/api/applications', applicationsRouter(db))
+  // app.use('/api/applications', applicationsRouter(db))
 
   app.use(notFoundHandler)
   app.use(errorHandler)
