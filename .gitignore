@@ -3,7 +3,6 @@ dist/
 build/
 .next/
 out/
-coverage/
 *.tsbuildinfo
 
 # Env files hold real credentials. Only the examples are committed.

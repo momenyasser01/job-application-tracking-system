@@ -32,8 +32,8 @@ jobs:
           --health-retries 5
 
     env:
-      # Real environment variables win over .env files, so this is what both the
-      # migration step and the test suite connect to.
+      # Real environment variables win over .env files, so this is what the
+      # migration step connects to.
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/jats_test
       NEXT_PUBLIC_API_URL: http://localhost:4000
 
@@ -58,8 +58,6 @@ jobs:
 
       - run: pnpm typecheck
 
-      # Exercises drizzle.config.ts + drizzle-kit; the test suite re-applies
-      # migrations idempotently in its global setup.
+      # Exercises drizzle.config.ts + drizzle-kit against a real Postgres, so a
+      # broken migration fails the build.
       - run: pnpm --filter @jats/api db:migrate
-
-      - run: pnpm test

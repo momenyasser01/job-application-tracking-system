@@ -7,8 +7,8 @@ import { errorHandler, notFoundHandler } from './middleware/error.js'
 // import { applicationsRouter } from './routes/applications.js'
 
 /**
- * Builds the app without binding a port, so tests can drive it in-process with
- * Supertest and `server.ts` stays the only place that calls `listen()`.
+ * Builds the app without binding a port, so `server.ts` stays the only place
+ * that calls `listen()`.
  */
 export function createApp(db: Db) {
   const app = express()

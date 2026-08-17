@@ -11,7 +11,6 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/dist/**',
       '**/.next/**',
-      '**/coverage/**',
       'apps/api/drizzle/**',
       'apps/web/next-env.d.ts',
     ],

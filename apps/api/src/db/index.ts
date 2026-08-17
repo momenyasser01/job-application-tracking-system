@@ -9,7 +9,7 @@ const usesTransactionPooler = new URL(env.DATABASE_URL).port === '6543'
 
 export const client = postgres(env.DATABASE_URL, {
   prepare: !usesTransactionPooler,
-  max: env.NODE_ENV === 'test' ? 1 : 10,
+  max: 10,
 })
 
 export const db = drizzle(client, { schema })

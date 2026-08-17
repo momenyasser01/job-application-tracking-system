@@ -3,7 +3,7 @@ import { defineConfig } from 'drizzle-kit'
 
 // drizzle-kit runs this file outside the app, so it loads env itself rather than
 // importing src/env.ts (which would exit the process on a validation failure).
-config({ path: process.env.NODE_ENV === 'test' ? '.env.test' : '.env', quiet: true })
+config({ path: '.env', quiet: true })
 
 // Migrations run DDL and must not go through Supabase's transaction pooler
 // (port 6543), which cannot hold session state. DIRECT_URL points at the direct
