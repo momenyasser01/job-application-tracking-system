@@ -1,8 +1,20 @@
 'use client'
 
-import { APPLICATION_STATUSES, createApplicationSchema } from '@jats/shared'
+import {
+  APPLICATION_PRIORITIES,
+  APPLICATION_SOURCE_LABELS,
+  APPLICATION_SOURCES,
+  APPLICATION_STATUSES,
+  createApplicationSchema,
+  EMPLOYMENT_TYPE_LABELS,
+  EMPLOYMENT_TYPES,
+  SALARY_PERIOD_LABELS,
+  SALARY_PERIODS,
+  WORK_MODEL_LABELS,
+  WORK_MODELS,
+} from '@jats/shared'
 import { useRouter } from 'next/navigation'
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { createApplication } from '@/lib/api'
 
 /** Untouched inputs arrive as '' from FormData; the API models "not set" as null. */
@@ -11,8 +23,37 @@ function optional(value: FormDataEntryValue | null): string | null {
   return text === '' ? null : text
 }
 
+/**
+ * Number inputs arrive as strings too. Anything unparseable becomes NaN rather
+ * than null, so the schema reports a bad value instead of silently dropping it.
+ */
+function optionalNumber(value: FormDataEntryValue | null): number | null {
+  const text = typeof value === 'string' ? value.trim() : ''
+  return text === '' ? null : Number(text)
+}
+
+/** One <option> per enum value, labelled from the shared map where there is one. */
+function options<T extends string>(values: readonly T[], labels?: Record<T, string>): ReactNode {
+  return values.map((value) => (
+    <option key={value} value={value}>
+      {labels ? labels[value] : value}
+    </option>
+  ))
+}
+
 const inputClass =
   'w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-xs outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500'
+
+const labelClass = 'grid gap-1 text-sm font-medium text-slate-700'
+
+function Field({ label, wide, children }: { label: string; wide?: boolean; children: ReactNode }) {
+  return (
+    <label className={wide ? `${labelClass} sm:col-span-2` : labelClass}>
+      {label}
+      {children}
+    </label>
+  )
+}
 
 export function ApplicationForm() {
   const router = useRouter()
@@ -27,12 +68,27 @@ export function ApplicationForm() {
     // The form is noValidate: the shared schema is the only validation rule set,
     // so the browser and the API can never disagree about what is acceptable.
     const parsed = createApplicationSchema.safeParse({
+      jobTitle: data.get('jobTitle'),
       company: data.get('company'),
-      role: data.get('role'),
+      location: data.get('location'),
+      jobUrl: data.get('jobUrl'),
+      employmentType: data.get('employmentType'),
+      workModel: data.get('workModel'),
       status: data.get('status'),
-      location: optional(data.get('location')),
-      url: optional(data.get('url')),
-      appliedAt: optional(data.get('appliedAt')),
+      priority: data.get('priority'),
+      // An empty date means "today", which is the schema's default — and a
+      // default only fires on undefined, never on null.
+      appliedAt: optional(data.get('appliedAt')) ?? undefined,
+      responsibilities: data.get('responsibilities'),
+      qualifications: data.get('qualifications'),
+      salaryMin: optionalNumber(data.get('salaryMin')),
+      salaryMax: optionalNumber(data.get('salaryMax')),
+      salaryCurrency: optional(data.get('salaryCurrency'))?.toUpperCase(),
+      salaryPeriod: optional(data.get('salaryPeriod')),
+      source: optional(data.get('source')),
+      jobDescription: optional(data.get('jobDescription')),
+      recruiterName: optional(data.get('recruiterName')),
+      recruiterEmail: optional(data.get('recruiterEmail')),
       notes: optional(data.get('notes')),
     })
 
@@ -60,46 +116,116 @@ export function ApplicationForm() {
       onSubmit={(event) => void handleSubmit(event)}
       className="grid gap-4 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-2"
     >
-      <label className="grid gap-1 text-sm font-medium text-slate-700">
-        Company
+      <Field label="Job title">
+        <input name="jobTitle" className={inputClass} placeholder="Backend Engineer" />
+      </Field>
+
+      <Field label="Company">
         <input name="company" className={inputClass} placeholder="Acme" />
-      </label>
+      </Field>
 
-      <label className="grid gap-1 text-sm font-medium text-slate-700">
-        Role
-        <input name="role" className={inputClass} placeholder="Backend Engineer" />
-      </label>
+      <Field label="Location">
+        <input name="location" className={inputClass} placeholder="Cairo, EG" />
+      </Field>
 
-      <label className="grid gap-1 text-sm font-medium text-slate-700">
-        Status
-        <select name="status" defaultValue="saved" className={`${inputClass} capitalize`}>
-          {APPLICATION_STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
+      <Field label="Job posting URL">
+        <input name="jobUrl" className={inputClass} placeholder="https://" />
+      </Field>
+
+      <Field label="Employment type">
+        <select name="employmentType" defaultValue="full-time" className={inputClass}>
+          {options(EMPLOYMENT_TYPES, EMPLOYMENT_TYPE_LABELS)}
         </select>
-      </label>
+      </Field>
 
-      <label className="grid gap-1 text-sm font-medium text-slate-700">
-        Applied on
+      <Field label="Work model">
+        <select name="workModel" defaultValue="on-site" className={inputClass}>
+          {options(WORK_MODELS, WORK_MODEL_LABELS)}
+        </select>
+      </Field>
+
+      <Field label="Status">
+        <select name="status" defaultValue="applied" className={`${inputClass} capitalize`}>
+          {options(APPLICATION_STATUSES)}
+        </select>
+      </Field>
+
+      <Field label="Priority">
+        <select name="priority" defaultValue="medium" className={`${inputClass} capitalize`}>
+          {options(APPLICATION_PRIORITIES)}
+        </select>
+      </Field>
+
+      {/* No defaultValue: the schema fills in today on submit, which keeps the
+          server and client renders from disagreeing about what "today" is. */}
+      <Field label="Applied on (defaults to today)">
         <input type="date" name="appliedAt" className={inputClass} />
-      </label>
+      </Field>
 
-      <label className="grid gap-1 text-sm font-medium text-slate-700">
-        Location
-        <input name="location" className={inputClass} placeholder="Remote" />
-      </label>
+      <Field label="Source">
+        <select name="source" defaultValue="" className={inputClass}>
+          <option value="">Not specified</option>
+          {options(APPLICATION_SOURCES, APPLICATION_SOURCE_LABELS)}
+        </select>
+      </Field>
 
-      <label className="grid gap-1 text-sm font-medium text-slate-700">
-        Posting URL
-        <input name="url" className={inputClass} placeholder="https://" />
-      </label>
+      <Field label="Salary minimum">
+        <input type="number" name="salaryMin" min={0} step="0.01" className={inputClass} />
+      </Field>
 
-      <label className="grid gap-1 text-sm font-medium text-slate-700 sm:col-span-2">
-        Notes
+      <Field label="Salary maximum">
+        <input type="number" name="salaryMax" min={0} step="0.01" className={inputClass} />
+      </Field>
+
+      <Field label="Currency">
+        <input
+          name="salaryCurrency"
+          maxLength={3}
+          className={`${inputClass} uppercase`}
+          placeholder="USD"
+        />
+      </Field>
+
+      <Field label="Pay period">
+        <select name="salaryPeriod" defaultValue="" className={inputClass}>
+          <option value="">Not specified</option>
+          {options(SALARY_PERIODS, SALARY_PERIOD_LABELS)}
+        </select>
+      </Field>
+
+      <Field wide label="Responsibilities">
+        <textarea
+          name="responsibilities"
+          rows={3}
+          className={inputClass}
+          placeholder="One per line"
+        />
+      </Field>
+
+      <Field wide label="Qualifications">
+        <textarea
+          name="qualifications"
+          rows={3}
+          className={inputClass}
+          placeholder="One per line"
+        />
+      </Field>
+
+      <Field wide label="Job description">
+        <textarea name="jobDescription" rows={3} className={inputClass} />
+      </Field>
+
+      <Field label="Recruiter name">
+        <input name="recruiterName" className={inputClass} />
+      </Field>
+
+      <Field label="Recruiter email">
+        <input type="email" name="recruiterEmail" className={inputClass} />
+      </Field>
+
+      <Field wide label="Notes">
         <textarea name="notes" rows={2} className={inputClass} />
-      </label>
+      </Field>
 
       <div className="flex items-center gap-3 sm:col-span-2">
         <button
