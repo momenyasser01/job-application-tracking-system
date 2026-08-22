@@ -45,7 +45,7 @@ export function ApplicationList({ applications }: { applications: Application[] 
           <thead className="border-b border-slate-200 text-xs tracking-wide text-slate-500 uppercase">
             <tr>
               <th className="px-4 py-3 font-medium">Company</th>
-              <th className="px-4 py-3 font-medium">Role</th>
+              <th className="px-4 py-3 font-medium">Job title</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Applied</th>
               <th className="px-4 py-3 font-medium">Location</th>
@@ -58,20 +58,16 @@ export function ApplicationList({ applications }: { applications: Application[] 
             {applications.map((application) => (
               <tr key={application.id} className={busyId === application.id ? 'opacity-50' : ''}>
                 <td className="px-4 py-3 font-medium text-slate-900">
-                  {application.url ? (
-                    <a
-                      href={application.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline underline-offset-2 hover:text-slate-600"
-                    >
-                      {application.company}
-                    </a>
-                  ) : (
-                    application.company
-                  )}
+                  <a
+                    href={application.jobUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline underline-offset-2 hover:text-slate-600"
+                  >
+                    {application.company}
+                  </a>
                 </td>
-                <td className="px-4 py-3 text-slate-700">{application.role}</td>
+                <td className="px-4 py-3 text-slate-700">{application.jobTitle}</td>
                 <td className="px-4 py-3">
                   <label className="sr-only" htmlFor={`status-${application.id}`}>
                     Status for {application.company}
@@ -93,10 +89,8 @@ export function ApplicationList({ applications }: { applications: Application[] 
                     ))}
                   </select>
                 </td>
-                <td className="px-4 py-3 text-slate-600 tabular-nums">
-                  {application.appliedAt ?? '—'}
-                </td>
-                <td className="px-4 py-3 text-slate-600">{application.location ?? '—'}</td>
+                <td className="px-4 py-3 text-slate-600 tabular-nums">{application.appliedAt}</td>
+                <td className="px-4 py-3 text-slate-600">{application.location}</td>
                 <td className="px-4 py-3 text-right">
                   <button
                     type="button"

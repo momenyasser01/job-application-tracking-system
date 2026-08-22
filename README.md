@@ -69,11 +69,19 @@ from the committed migration history.
 
 ## Adding authentication
 
-There is none, by design. Two places to touch:
+There is none, by design — but the database is ready for it. `src/db/schema.ts`
+already has a `users` table and a `user_id` foreign key on `applications`, so
+what is left is the identity and the scoping:
 
-1. `apps/api/src/app.ts` — one `app.use('/api', requireAuth)` above the router.
-2. `apps/api/src/routes/applications.ts` — add a user filter to the queries, plus
-   a `user_id` column in `src/db/schema.ts` and a generated migration.
+1. `apps/api/src/app.ts` — one `app.use('/api', requireAuth)` above the router,
+   resolving a session to a `users.id`.
+2. `apps/api/src/modules/applications/` — every query filtered by that id, and
+   `user_id` set from the session on insert. It is deliberately absent from the
+   `@jats/shared` schemas: a client that could send it could write into another
+   account.
+
+The `users` table carries identity only — id, email, name. Credentials,
+providers and verification belong to whichever approach you pick.
 
 ## CI
 
